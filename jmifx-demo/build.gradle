@@ -1,1 +1,20 @@
-// configured in its task
+plugins {
+    id 'io.jmix'
+    id 'java'
+}
+
+apply plugin: 'org.springframework.boot'
+
+jmix {
+    bomVersion = '3.0.3'
+}
+
+dependencies {
+    implementation project(':jmifx-starter')
+    // wasm assets land on the app classpath via the client module's jar
+    runtimeOnly project(':jmifx-demo-client')
+
+    implementation 'io.jmix.core:jmix-core-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    runtimeOnly 'com.h2database:h2'
+}

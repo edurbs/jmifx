@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Authored for Scene Builder: Label + TextField + Button (spec §9) -->
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.jmifx.demo.client.HelloViewController"
+      spacing="10" alignment="CENTER" prefWidth="400" prefHeight="200">
+    <Label fx:id="greetingLabel" text="Hello!"/>
+    <TextField fx:id="nameField" promptText="Type your name"/>
+    <Button fx:id="greetButton" text="Greet" onAction="#greet"/>
+</VBox>

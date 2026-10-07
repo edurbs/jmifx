@@ -1,3 +1,9 @@
+plugins {
+    // Loaded at root so jmifx-demo can apply io.jmix and the Spring Boot
+    // plugin (provided by Jmix's classpath) without versions — erp pattern.
+    id 'io.jmix' version '3.0.3' apply false
+}
+
 allprojects {
     group = 'com.jmifx'
     version = '0.1.0-SNAPSHOT'

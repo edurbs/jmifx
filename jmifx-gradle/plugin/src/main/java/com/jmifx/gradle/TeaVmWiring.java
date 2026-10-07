@@ -42,9 +42,16 @@ public final class TeaVmWiring {
     static void wire(Project project, JmifxPluginExtension extension) {
         project.getPluginManager().apply("org.teavm");
 
-        // Snapshot repo for the WebFX Kit (harmless if the build already declares it)
-        project.getRepositories().maven(repo ->
-                repo.setUrl(WEBFX_SNAPSHOT_REPO));
+        // Snapshot repo for the WebFX Kit — only when project repositories are
+        // allowed; builds using FAIL_ON_PROJECT_REPOS (like jmifx's own root)
+        // must declare it in settings (ours does).
+        try {
+            project.getRepositories().maven(repo ->
+                    repo.setUrl(WEBFX_SNAPSHOT_REPO));
+        } catch (Exception projectReposNotAllowed) {
+            project.getLogger().debug("jmifx: project repositories disabled; " +
+                    "assuming the WebFX snapshot repo is declared in settings");
+        }
 
         DependencyHandler deps = project.getDependencies();
         for (String artifact : WEBFX_ARTIFACTS) {
@@ -65,10 +72,14 @@ public final class TeaVmWiring {
         pkg.configure(task -> task.dependsOn(project.getTasks().named("buildWasmGC")));
         project.getTasks().named("assemble", task -> task.dependsOn(pkg));
 
-        // Dedicated resources dir for packaged web assets (never build/resources/main)
-        var sourceSets = project.getExtensions()
-                .getByType(org.gradle.api.plugins.JavaPluginExtension.class).getSourceSets();
-        sourceSets.getByName("main").getResources()
-                .srcDir(project.getLayout().getBuildDirectory().dir("jmifx-web"));
+        // Dedicated output for packaged web assets (never build/resources/main).
+        // Assets ride the JAR (not processResources): teavm compiles from
+        // `classes`, which includes processResources — wiring assets through
+        // processResources would create a dependency cycle.
+        var webDir = project.getLayout().getBuildDirectory().dir("jmifx-web");
+        project.getTasks().named("jar", org.gradle.api.tasks.bundling.Jar.class, jarTask -> {
+            jarTask.from(webDir);
+            jarTask.dependsOn(pkg);
+        });
     }
 }

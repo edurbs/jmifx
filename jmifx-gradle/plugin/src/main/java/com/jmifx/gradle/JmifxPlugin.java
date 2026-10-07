@@ -33,5 +33,7 @@ public final class JmifxPlugin implements Plugin<Project> {
         main.getJava().srcDir(generate.getGeneratedDir());
         project.getTasks().named("compileJava",
                 task -> task.dependsOn(generate));
+
+        TeaVmWiring.wire(project, extension);
     }
 }

@@ -1,0 +1,21 @@
+package client;
+
+import com.jmifx.FxApplication;
+import com.jmifx.FxViewRegistry;
+
+public class DemoFxApp extends FxApplication {
+
+    @Override
+    protected String getStartupViewId() {
+        return "hello-view";
+    }
+
+    @Override
+    protected void registerViews(FxViewRegistry registry) {
+        com.jmifx.generated.FxViewsIndex.registerAll(registry);
+    }
+
+    public static void main(String[] args) {
+        launchApp(DemoFxApp::new, args);
+    }
+}

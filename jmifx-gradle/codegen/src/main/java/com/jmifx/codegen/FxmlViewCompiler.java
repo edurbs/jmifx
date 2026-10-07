@@ -1,10 +1,15 @@
 package com.jmifx.codegen;
 
+import com.jmifx.codegen.emit.ViewClassWriter;
+import com.jmifx.codegen.emit.ViewsIndexWriter;
 import com.jmifx.codegen.model.ElementNode;
 import com.jmifx.codegen.model.ViewElement;
 import com.jmifx.codegen.parser.FxmlParser;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -68,7 +73,35 @@ public final class FxmlViewCompiler {
             views.add(new ViewElement(viewId, controller, root, fxmlFile));
         }
 
-        return new CompilationResult(errors, views);
+        CompilationResult result = new CompilationResult(errors, views);
+        if (result.success() && !views.isEmpty()) {
+            emit(result.views(), generatedSourcesDir);
+        }
+        return result;
+    }
+
+    private void emit(List<ViewElement> views, Path generatedSourcesDir) {
+        ViewClassWriter viewWriter = new ViewClassWriter();
+        for (ViewElement view : views) {
+            String pkg = view.controllerFqcn();
+            int dot = pkg.lastIndexOf('.');
+            String pkgPath = dot < 0 ? "" : pkg.substring(0, dot).replace('.', '/');
+            Path file = generatedSourcesDir.resolve(pkgPath)
+                    .resolve(view.generatedClassName() + ".java");
+            try {
+                Files.createDirectories(file.getParent());
+                Files.writeString(file, viewWriter.render(view));
+            } catch (IOException e) {
+                throw new UncheckedIOException("Cannot write " + file, e);
+            }
+        }
+        Path index = generatedSourcesDir.resolve("com/jmifx/generated/FxViewsIndex.java");
+        try {
+            Files.createDirectories(index.getParent());
+            Files.writeString(index, new ViewsIndexWriter().render(views));
+        } catch (IOException e) {
+            throw new UncheckedIOException("Cannot write " + index, e);
+        }
     }
 
     private void validateTree(Path file, ElementNode root, List<FxmlCompileError> errors) {

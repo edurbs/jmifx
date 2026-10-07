@@ -1,0 +1,44 @@
+// Generated from hello-view.fxml by jmifx-codegen — DO NOT EDIT
+package fixture;
+
+import com.jmifx.FxView;
+
+import javafx.event.ActionEvent;
+import javafx.geometry.Pos;
+import javafx.scene.Parent;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.VBox;
+
+public class HelloView implements FxView {
+
+    private final fixture.HelloController controller = new fixture.HelloController();
+    private final VBox root = new VBox(10.0);
+    private final Label greetingLabel = new Label();
+    private final TextField nameField = new TextField();
+    private final Button greetButton = new Button();
+
+    public HelloView() {
+        root.setAlignment(Pos.valueOf("CENTER"));
+        greetingLabel.setText("Hello!");
+        nameField.setPromptText("Type your name");
+        greetButton.setText("Greet");
+        greetButton.addEventHandler(ActionEvent.ACTION, controller::greet);
+        root.getChildren().addAll(greetingLabel, nameField, greetButton);
+        controller.greetingLabel = greetingLabel;
+        controller.nameField = nameField;
+        controller.greetButton = greetButton;
+        controller.initialize();
+    }
+
+    @Override
+    public String getId() {
+        return "hello-view";
+    }
+
+    @Override
+    public Parent getRoot() {
+        return root;
+    }
+}

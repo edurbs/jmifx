@@ -45,7 +45,8 @@ public final class ElementNode {
     private ElementNode(String tag, int line, Map<String, String> attributes, List<ElementNode> children) {
         this.tag = tag;
         this.line = line;
-        this.attributes = Map.copyOf(attributes);
+        // LinkedHashMap to preserve FXML document order (emission order matters)
+        this.attributes = java.util.Collections.unmodifiableMap(new LinkedHashMap<>(attributes));
         this.children = List.copyOf(children);
     }
 

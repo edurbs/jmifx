@@ -11,8 +11,13 @@ jmix {
 
 dependencies {
     implementation project(':jmifx-starter')
-    // wasm assets land on the app classpath via the client module's jar
-    runtimeOnly project(':jmifx-demo-client')
+    // wasm assets land on the app classpath via the client module's jar.
+    // The WebFX Kit is browser-only: exclude it so it never touches the
+    // server classpath (hibernate-validator probes javafx.beans classes and
+    // crashes on the kit's partially-initializable emul classes).
+    runtimeOnly(project(':jmifx-demo-client')) {
+        exclude group: 'dev.webfx'
+    }
 
     implementation 'io.jmix.core:jmix-core-starter'
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'

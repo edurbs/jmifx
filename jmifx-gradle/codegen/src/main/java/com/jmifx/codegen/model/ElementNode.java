@@ -17,12 +17,16 @@ public final class ElementNode {
     private final int line;
     private final Map<String, String> attributes;
     private final List<ElementNode> children;
+    private final String textContent; // non-whitespace element text, if any
+    private final int textLine;
 
     public static final class Builder {
         private final String tag;
         private final int line;
         private final Map<String, String> attributes = new LinkedHashMap<>();
         private final List<Builder> childBuilders = new ArrayList<>();
+        private String textContent;
+        private int textLine;
 
         public Builder(String tag, int line, Map<String, String> attributes) {
             this.tag = tag;
@@ -34,20 +38,32 @@ public final class ElementNode {
             childBuilders.add(child);
         }
 
+        public void setText(String text, int line) {
+            this.textContent = text;
+            this.textLine = line;
+        }
+
+        public String textContent() {
+            return textContent;
+        }
+
         public ElementNode build() {
             List<ElementNode> builtChildren = childBuilders.stream()
                     .map(Builder::build)
                     .toList();
-            return new ElementNode(tag, line, attributes, builtChildren);
+            return new ElementNode(tag, line, attributes, builtChildren, textContent, textLine);
         }
     }
 
-    private ElementNode(String tag, int line, Map<String, String> attributes, List<ElementNode> children) {
+    private ElementNode(String tag, int line, Map<String, String> attributes, List<ElementNode> children,
+                        String textContent, int textLine) {
         this.tag = tag;
         this.line = line;
         // LinkedHashMap to preserve FXML document order (emission order matters)
         this.attributes = java.util.Collections.unmodifiableMap(new LinkedHashMap<>(attributes));
         this.children = List.copyOf(children);
+        this.textContent = textContent;
+        this.textLine = textLine;
     }
 
     public String tag() {
@@ -68,6 +84,16 @@ public final class ElementNode {
 
     public String attribute(String name) {
         return attributes.get(name);
+    }
+
+    /** Non-whitespace element text content, or null when the element is empty. */
+    public String textContent() {
+        return textContent;
+    }
+
+    /** Source line of the first non-whitespace text chunk. */
+    public int textLine() {
+        return textLine;
     }
 
     /** Depth-first walk over this element and all descendants. */

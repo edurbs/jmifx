@@ -48,6 +48,7 @@ public final class FxmlParser {
         private final Deque<ElementNode.Builder> stack = new ArrayDeque<>();
         private Locator locator;
         private ElementNode root;
+        private final StringBuilder pendingText = new StringBuilder();
 
         @Override
         public void setDocumentLocator(Locator locator) {
@@ -74,8 +75,20 @@ public final class FxmlParser {
         @Override
         public void endElement(String uri, String localName, String qName) {
             ElementNode.Builder finished = stack.pop();
+            String text = pendingText.toString().strip();
+            if (!text.isEmpty() && finished.textContent() == null) {
+                finished.setText(text, locator.getLineNumber());
+            }
+            pendingText.setLength(0);
             if (stack.isEmpty()) {
                 root = finished.build();
+            }
+        }
+
+        @Override
+        public void characters(char[] ch, int start, int length) {
+            if (!stack.isEmpty()) {
+                pendingText.append(ch, start, length);
             }
         }
     }

@@ -157,6 +157,69 @@ class FxmlViewCompilerTest {
     }
 
     @Test
+    void rejectsDuplicateGeneratedClassNames() throws IOException {
+        Path dir = Files.createDirectories(generatedDir.resolve("dupcls"));
+        Path login = Files.writeString(dir.resolve("login.fxml"), """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <Pane xmlns:fx="http://javafx.com/fxml" fx:controller="fixture.LoginController">
+                    <Label text="in"/>
+                </Pane>
+                """);
+        Path loginView = Files.writeString(dir.resolve("login-view.fxml"), """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <Pane xmlns:fx="http://javafx.com/fxml" fx:controller="fixture.LoginViewController">
+                    <Label text="in"/>
+                </Pane>
+                """);
+
+        FxmlViewCompiler compiler = new FxmlViewCompiler();
+
+        CompilationResult result = compiler.compile(List.of(login, loginView), generatedDir);
+
+        assertFalse(result.success());
+        String formatted = result.errors().get(0).format();
+        assertTrue(formatted.contains("duplicate view class 'LoginView' derived from files "), () -> formatted);
+        assertTrue(formatted.contains("login.fxml") && formatted.contains("login-view.fxml"), () -> formatted);
+    }
+
+    @Test
+    void rejectsSpacingOnNonContainer() throws IOException {
+        Path fxml = Files.writeString(generatedDir.resolve("badspacing.fxml"), """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <Pane xmlns:fx="http://javafx.com/fxml" fx:controller="fixture.Bad">
+                    <Label spacing="99" text="x"/>
+                </Pane>
+                """);
+
+        FxmlViewCompiler compiler = new FxmlViewCompiler();
+
+        CompilationResult result = compiler.compile(List.of(fxml), generatedDir);
+
+        FxmlCompileError error = result.errors().get(0);
+        assertTrue(error.format().contains("badspacing.fxml:3: spacing is only supported on VBox and HBox"),
+                () -> error.format());
+    }
+
+    @Test
+    void rejectsElementTextContent() throws IOException {
+        Path fxml = Files.writeString(generatedDir.resolve("badtext.fxml"), """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <Pane xmlns:fx="http://javafx.com/fxml" fx:controller="fixture.Bad">
+                    <Label>Hello</Label>
+                </Pane>
+                """);
+
+        FxmlViewCompiler compiler = new FxmlViewCompiler();
+
+        CompilationResult result = compiler.compile(List.of(fxml), generatedDir);
+
+        FxmlCompileError error = result.errors().get(0);
+        assertTrue(error.format().contains(
+                        "badtext.fxml:3: element text content is not supported (use the text attribute)"),
+                () -> error.format());
+    }
+
+    @Test
     void errorsAreCumulativeNotFirstOnly() throws IOException {
         Path fxml = Files.writeString(generatedDir.resolve("many.fxml"), """
                 <?xml version="1.0" encoding="UTF-8"?>

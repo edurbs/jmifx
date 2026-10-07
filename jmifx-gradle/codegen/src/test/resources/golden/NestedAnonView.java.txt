@@ -1,0 +1,47 @@
+// Generated from nested-anon.fxml by jmifx-codegen — DO NOT EDIT
+package fixture;
+
+import com.jmifx.FxView;
+
+import javafx.event.ActionEvent;
+import javafx.geometry.Pos;
+import javafx.scene.Parent;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+
+public class NestedAnonView implements FxView {
+
+    private final fixture.NestedController controller = new fixture.NestedController();
+    private final VBox root = new VBox(10.0);
+    private final HBox hbox_1 = new HBox();
+    private final Label label_2 = new Label();
+    private final Label bLabel = new Label();
+    private final Button okButton = new Button();
+
+    public NestedAnonView() {
+        root.setAlignment(Pos.valueOf("CENTER"));
+        hbox_1.setSpacing(5.0);
+        label_2.setText("A");
+        bLabel.setText("B");
+        bLabel.setId("b-label");
+        okButton.setText("OK");
+        okButton.addEventHandler(ActionEvent.ACTION, controller::ok);
+        root.getChildren().addAll(hbox_1, okButton);
+        hbox_1.getChildren().addAll(label_2, bLabel);
+        controller.bLabel = bLabel;
+        controller.okButton = okButton;
+        controller.initialize();
+    }
+
+    @Override
+    public String getId() {
+        return "nested-anon";
+    }
+
+    @Override
+    public Parent getRoot() {
+        return root;
+    }
+}

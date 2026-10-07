@@ -55,4 +55,21 @@ class EmissionTest {
             assertEquals(0, files.filter(Files::isRegularFile).count());
         }
     }
+
+    @Test
+    void nestedContainersAndAnonymousChildrenEmitCorrectCode() throws Exception {
+        new FxmlViewCompiler().compile(List.of(fixture("nested-anon.fxml")), generatedDir);
+
+        Path emitted = generatedDir.resolve("fixture/NestedAnonView.java");
+        assertTrue(Files.exists(emitted), "expected " + emitted);
+        assertEquals(golden("NestedAnonView.java.txt"), normalized(emitted));
+    }
+
+    @Test
+    void idAttributeEmitsSetId() throws Exception {
+        new FxmlViewCompiler().compile(List.of(fixture("nested-anon.fxml")), generatedDir);
+
+        String source = Files.readString(generatedDir.resolve("fixture/NestedAnonView.java"));
+        assertTrue(source.contains("bLabel.setId(\"b-label\");"), source);
+    }
 }

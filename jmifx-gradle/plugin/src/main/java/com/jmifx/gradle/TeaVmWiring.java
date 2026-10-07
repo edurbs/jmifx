@@ -54,8 +54,20 @@ public final class TeaVmWiring {
         }
 
         DependencyHandler deps = project.getDependencies();
-        for (String artifact : WEBFX_ARTIFACTS) {
-            deps.add("implementation", "dev.webfx:" + artifact + ":" + WEBFX_VERSION);
+        // Browser-only kit: compileOnly (never publishes to consumers — the kit
+        // on a server classpath breaks hibernate-validator's JavaFX probes) plus
+        // TeaVM's own classpath configuration, which the wasm compile consumes.
+        if (project.getConfigurations().findByName("teavmClasspath") != null) {
+            for (String artifact : WEBFX_ARTIFACTS) {
+                deps.add("compileOnly", "dev.webfx:" + artifact + ":" + WEBFX_VERSION);
+                deps.add("teavmClasspath", "dev.webfx:" + artifact + ":" + WEBFX_VERSION);
+            }
+        } else {
+            // Older/newer TeaVM without the dedicated configuration — fall back
+            // to implementation so the wasm build still works.
+            for (String artifact : WEBFX_ARTIFACTS) {
+                deps.add("implementation", "dev.webfx:" + artifact + ":" + WEBFX_VERSION);
+            }
         }
 
         TeaVMExtension teavm = (TeaVMExtension) project.getExtensions().getByName("teavm");

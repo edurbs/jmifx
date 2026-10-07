@@ -100,6 +100,62 @@ class CodegenCompileIT {
         }
     }
 
+    @Test
+    void nestedAndAnonymousViewCompilesAndBuildsCorrectTree() throws Exception {
+        Path fxml = Path.of(getClass().getResource("/fxml/nested-anon.fxml").getPath());
+        Path generated = work.resolve("generated2");
+        CompilationResult result = new FxmlViewCompiler().compile(List.of(fxml), generated);
+        assertTrue(result.success(), () -> result.errors().toString());
+
+        String controllerSrc = Files.readString(
+                Path.of(getClass().getResource("/javafixture/NestedController.java.txt").getPath()));
+        Files.createDirectories(generated.resolve("fixture"));
+        Files.writeString(generated.resolve("fixture/NestedController.java"), controllerSrc);
+
+        Path out = work.resolve("out2");
+        Files.createDirectories(out);
+        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        int exit = compiler.run(null, null, System.err,
+                "--release", "21",
+                "-classpath", System.getProperty("java.class.path"),
+                "-d", out.toString(),
+                generated.resolve("fixture/NestedAnonView.java").toString(),
+                generated.resolve("fixture/NestedController.java").toString());
+        assertEquals(0, exit, "javac failed on generated nested sources");
+
+        try (URLClassLoader loader = new URLClassLoader(
+                new URL[]{ out.toUri().toURL() }, getClass().getClassLoader())) {
+            Class<?> viewClass = Class.forName("fixture.NestedAnonView", true, loader);
+            var view = viewClass.getDeclaredConstructor().newInstance();
+            var root = (javafx.scene.layout.VBox) viewClass.getMethod("getRoot").invoke(view);
+
+            // root children: HBox, Button
+            assertEquals(2, root.getChildren().size());
+            var hbox = (javafx.scene.layout.HBox) root.getChildren().get(0);
+            var button = (javafx.scene.control.Button) root.getChildren().get(1);
+
+            // nested children present and ordered — nothing silently dropped
+            assertEquals(2, hbox.getChildren().size());
+            var labelA = (javafx.scene.control.Label) hbox.getChildren().get(0);
+            var labelB = (javafx.scene.control.Label) hbox.getChildren().get(1);
+            assertEquals("A", labelA.getText());
+            assertEquals("B", labelB.getText());
+            assertEquals("b-label", labelB.getId());
+            assertEquals(5.0, hbox.getSpacing());
+            assertEquals("OK", button.getText());
+
+            var controllerField = viewClass.getDeclaredField("controller");
+            controllerField.setAccessible(true);
+            Object controller = controllerField.get(view);
+            @SuppressWarnings("unchecked")
+            List<String> events = (List<String>) controller.getClass().getField("events").get(controller);
+            int before = events.size();
+            button.fire();
+            assertTrue(events.size() == before + 1 && events.get(before).equals("ok"),
+                    () -> "handler not wired: " + events);
+        }
+    }
+
     private static String[] join(List<String> options, List<String> files) {
         String[] all = new String[options.size() + files.size()];
         for (int i = 0; i < options.size(); i++) {

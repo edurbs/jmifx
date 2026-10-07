@@ -46,6 +46,7 @@ public final class FxmlViewCompiler {
         List<FxmlCompileError> errors = new ArrayList<>();
         List<ViewElement> views = new ArrayList<>();
         Map<String, Path> viewIdToFirstFile = new HashMap<>();
+        Map<String, Path> classNameToFirstFile = new HashMap<>();
 
         for (Path fxmlFile : fxmlFiles) {
             ElementNode root = parser.parse(fxmlFile);
@@ -64,13 +65,25 @@ public final class FxmlViewCompiler {
 
             validateTree(fxmlFile, root, errors);
 
+            ViewElement view = new ViewElement(viewId, controller, root, fxmlFile);
+
             Path firstFile = viewIdToFirstFile.putIfAbsent(viewId, fxmlFile);
             if (firstFile != null) {
                 errors.add(new FxmlCompileError(fxmlFile, 1,
                         "duplicate view id '" + viewId + "' in files " + firstFile + " and " + fxmlFile));
             }
 
-            views.add(new ViewElement(viewId, controller, root, fxmlFile));
+            // login.fxml and login-view.fxml both derive LoginView — same
+            // package would silently overwrite the first generated class
+            String classKey = packageOf(controller) + "." + view.generatedClassName();
+            Path firstClassFile = classNameToFirstFile.putIfAbsent(classKey, fxmlFile);
+            if (firstClassFile != null) {
+                errors.add(new FxmlCompileError(fxmlFile, 1,
+                        "duplicate view class '" + view.generatedClassName()
+                                + "' derived from files " + firstClassFile + " and " + fxmlFile));
+            }
+
+            views.add(view);
         }
 
         CompilationResult result = new CompilationResult(errors, views);
@@ -112,6 +125,10 @@ public final class FxmlViewCompiler {
                         "unsupported element '" + element.tag() + "' (supported: "
                                 + String.join(", ", SUPPORTED_ELEMENTS) + ")"));
             }
+            if (element.textContent() != null) {
+                errors.add(new FxmlCompileError(file, element.textLine(),
+                        "element text content is not supported (use the text attribute)"));
+            }
             for (Map.Entry<String, String> attr : element.attributes().entrySet()) {
                 if (attr.getKey().equals("fx:controller")) {
                     continue; // consumed as the controller declaration, not a node property
@@ -136,6 +153,11 @@ public final class FxmlViewCompiler {
         if ("onAction".equals(name) && !"Button".equals(element.tag())) {
             errors.add(new FxmlCompileError(file, element.line(),
                     "onAction is only supported on Button"));
+            return;
+        }
+        if ("spacing".equals(name) && !"VBox".equals(element.tag()) && !"HBox".equals(element.tag())) {
+            errors.add(new FxmlCompileError(file, element.line(),
+                    "spacing is only supported on VBox and HBox"));
             return;
         }
         switch (name) {
@@ -164,5 +186,10 @@ public final class FxmlViewCompiler {
     private static String viewId(Path fxmlFile) {
         String name = fxmlFile.getFileName().toString();
         return name.substring(0, name.lastIndexOf('.'));
+    }
+
+    private static String packageOf(String fqcn) {
+        int dot = fqcn.lastIndexOf('.');
+        return dot < 0 ? "" : fqcn.substring(0, dot);
     }
 }

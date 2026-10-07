@@ -4,13 +4,17 @@ import com.jmifx.codegen.model.ElementNode;
 import com.jmifx.codegen.model.ViewElement;
 
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 
 /**
- * Emits one reflection-free view class per FXML file. The shape is pinned by
- * the golden files in src/test/resources/golden — change the goldens and these
- * tests together.
+ * Emits one reflection-free view class per FXML file. Every element — at any
+ * nesting depth, with or without fx:id — becomes a field with a stable name
+ * (fx:id when present, else {@code tag_n} numbered in document order). The
+ * emission shape is pinned by the golden files in src/test/resources/golden —
+ * change the goldens and the emission tests together.
  */
 public final class ViewClassWriter {
 
@@ -21,55 +25,62 @@ public final class ViewClassWriter {
         String controllerPackage = packageOf(controller);
         String className = view.generatedClassName();
 
-        List<String> fxIdFields = new ArrayList<>();
-        List<String> fieldDeclarations = new ArrayList<>();
-        List<String> ctorBody = new ArrayList<>();
-        List<String> childVars = new ArrayList<>();
-        int anonCounter = 0;
+        // Pre-pass: one stable variable name per element (document order)
+        Map<ElementNode, String> names = new IdentityHashMap<>();
+        List<ElementNode> documentOrder = new ArrayList<>();
+        assignNames(root, names, documentOrder, new int[1]);
 
-        // Root field + children walk in document order
-        fieldDeclarations.add("    private final " + controller + " controller = new " + controller + "();");
-        String rootVar = declareNode(root, "root", fieldDeclarations);
-        childVars.addAll(collectChildren(root, fieldDeclarations, anonCounter));
+        List<String> fields = new ArrayList<>();
+        List<String> body = new ArrayList<>();
 
-        // Static properties in document order (root first, then descendants)
-        appendProperties(root, rootVar, ctorBody);
-        for (ElementNode child : root.children()) {
-            appendChildProperties(child, ctorBody);
+        // Fields: controller first, then every element in document order
+        fields.add("    private final " + controller + " controller = new " + controller + "();");
+        boolean first = true;
+        for (ElementNode element : documentOrder) {
+            String spacing = element.attribute("spacing");
+            String ctor = (first && spacing != null)
+                    ? "new " + element.tag() + "(" + Double.parseDouble(spacing) + ")"
+                    : "new " + element.tag() + "()";
+            fields.add("    private final " + element.tag() + " " + names.get(element) + " = " + ctor + ";");
+            first = false;
         }
 
-        // Child wiring
-        if (!root.children().isEmpty()) {
-            ctorBody.add("        " + rootVar + ".getChildren().addAll(" + String.join(", ", childVars) + ");");
+        // Property statements in document order (root spacing consumed by ctor)
+        for (ElementNode element : documentOrder) {
+            String var = names.get(element);
+            boolean isRoot = element == root;
+            for (Map.Entry<String, String> attr : element.attributes().entrySet()) {
+                appendProperty(element, var, attr.getKey(), attr.getValue(), isRoot, body);
+            }
+        }
+
+        // Child wiring per container, outermost first
+        for (ElementNode element : documentOrder) {
+            if (!element.children().isEmpty()) {
+                List<String> childVars = new ArrayList<>();
+                for (ElementNode child : element.children()) {
+                    childVars.add(names.get(child));
+                }
+                body.add("        " + names.get(element) + ".getChildren().addAll("
+                        + String.join(", ", childVars) + ");");
+            }
         }
 
         // Controller field injection (document order, fx:id elements only)
-        root.walk(element -> {
+        for (ElementNode element : documentOrder) {
             String fxId = element.attribute("fx:id");
             if (fxId != null) {
-                ctorBody.add("        controller." + fxId + " = " + varName(element) + ";");
+                body.add("        controller." + fxId + " = " + names.get(element) + ";");
             }
-        });
-        ctorBody.add("        controller.initialize();");
+        }
+        body.add("        controller.initialize();");
 
         // Imports based on what the view actually uses
-        StringBuilder sb = new StringBuilder();
-        sb.append("// Generated from ").append(view.sourceFile().getFileName())
-                .append(" by jmifx-codegen — DO NOT EDIT\n");
-        if (!controllerPackage.isEmpty()) {
-            sb.append("package ").append(controllerPackage).append(";\n\n");
-        }
-        sb.append("import com.jmifx.FxView;\n");
-        if (uses(root, "onAction")) {
-            sb.append("import javafx.event.ActionEvent;\n");
-        }
-        if (uses(root, "alignment")) {
-            sb.append("import javafx.geometry.Pos;\n");
-        }
-        sb.append("import javafx.scene.Parent;\n");
-        java.util.Set<String> controlImports = new java.util.TreeSet<>();
-        java.util.Set<String> layoutImports = new java.util.TreeSet<>();
-        root.walk(element -> {
+        TreeSet<String> controlImports = new TreeSet<>();
+        TreeSet<String> layoutImports = new TreeSet<>();
+        boolean usesActionEvent = false;
+        boolean usesPos = false;
+        for (ElementNode element : documentOrder) {
             switch (element.tag()) {
                 case "Label" -> controlImports.add("import javafx.scene.control.Label;\n");
                 case "TextField" -> controlImports.add("import javafx.scene.control.TextField;\n");
@@ -80,17 +91,38 @@ public final class ViewClassWriter {
                 case "Pane" -> layoutImports.add("import javafx.scene.layout.Pane;\n");
                 default -> { }
             }
-        });
+            if (element.attribute("onAction") != null) {
+                usesActionEvent = true;
+            }
+            if (element.attribute("alignment") != null) {
+                usesPos = true;
+            }
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("// Generated from ").append(view.sourceFile().getFileName())
+                .append(" by jmifx-codegen — DO NOT EDIT\n");
+        if (!controllerPackage.isEmpty()) {
+            sb.append("package ").append(controllerPackage).append(";\n\n");
+        }
+        sb.append("import com.jmifx.FxView;\n");
+        if (usesActionEvent) {
+            sb.append("import javafx.event.ActionEvent;\n");
+        }
+        if (usesPos) {
+            sb.append("import javafx.geometry.Pos;\n");
+        }
+        sb.append("import javafx.scene.Parent;\n");
         controlImports.forEach(sb::append);
         layoutImports.forEach(sb::append);
         sb.append('\n');
         sb.append("public class ").append(className).append(" implements FxView {\n\n");
-        for (String field : fieldDeclarations) {
+        for (String field : fields) {
             sb.append(field).append('\n');
         }
         sb.append('\n');
         sb.append("    public ").append(className).append("() {\n");
-        for (String statement : ctorBody) {
+        for (String statement : body) {
             sb.append(statement).append('\n');
         }
         sb.append("    }\n\n");
@@ -108,77 +140,49 @@ public final class ViewClassWriter {
 
     // --- helpers -------------------------------------------------------------
 
-    private String declareNode(ElementNode element, String var, List<String> fields) {
-        String spacing = element.attribute("spacing");
-        String ctor = spacing != null
-                ? "new " + element.tag() + "(" + Double.parseDouble(spacing) + ")"
-                : "new " + element.tag() + "()";
+    private void assignNames(ElementNode element, Map<ElementNode, String> names, List<ElementNode> order,
+                             int[] anonCounter) {
+        order.add(element);
         String fxId = element.attribute("fx:id");
-        String name = fxId != null ? fxId : var;
-        fields.add("    private final " + element.tag() + " " + name + " = " + ctor + ";");
-        return name;
-    }
-
-    private List<String> collectChildren(ElementNode root, List<String> fields, int counter) {
-        List<String> vars = new ArrayList<>();
-        for (ElementNode child : root.children()) {
-            String fxId = child.attribute("fx:id");
-            String var = fxId != null ? fxId : child.tag().toLowerCase() + "_" + (++counter);
-            String ctor = "new " + child.tag() + "()";
-            fields.add("    private final " + child.tag() + " " + var + " = " + ctor + ";");
-            vars.add(var);
+        if (fxId != null) {
+            names.put(element, fxId);
+        } else if (order.size() == 1) {
+            names.put(element, "root"); // the root element is always addressable as `root`
+        } else {
+            names.put(element, element.tag().toLowerCase() + "_" + (++anonCounter[0]));
         }
-        return vars;
-    }
-
-    private void appendProperties(ElementNode element, String var, List<String> body) {
-        for (Map.Entry<String, String> attr : element.attributes().entrySet()) {
-            appendProperty(element, var, attr.getKey(), attr.getValue(), body);
-        }
-    }
-
-    private void appendChildProperties(ElementNode element, List<String> body) {
-        String var = varName(element);
-        for (Map.Entry<String, String> attr : element.attributes().entrySet()) {
-            appendProperty(element, var, attr.getKey(), attr.getValue(), body);
-        }
-        for (ElementNode grandChild : element.children()) {
-            appendChildProperties(grandChild, body);
+        for (ElementNode child : element.children()) {
+            assignNames(child, names, order, anonCounter);
         }
     }
 
     private void appendProperty(ElementNode element, String var, String name, String value,
-                                List<String> body) {
+                                boolean isRoot, List<String> body) {
         switch (name) {
             case "text" -> body.add("        " + var + ".setText(\"" + escape(value) + "\");");
             case "promptText" -> body.add("        " + var + ".setPromptText(\"" + escape(value) + "\");");
+            case "id" -> body.add("        " + var + ".setId(\"" + escape(value) + "\");");
             case "prefWidth" -> body.add("        " + var + ".setPrefWidth(" + Double.parseDouble(value) + ");");
             case "prefHeight" -> body.add("        " + var + ".setPrefHeight(" + Double.parseDouble(value) + ");");
             case "maxWidth" -> body.add("        " + var + ".setMaxWidth(" + Double.parseDouble(value) + ");");
+            case "spacing" -> {
+                if (!isRoot) {
+                    body.add("        " + var + ".setSpacing(" + Double.parseDouble(value) + ");");
+                } // root spacing consumed by the constructor
+            }
             case "alignment" -> body.add("        " + var + ".setAlignment(Pos.valueOf(\"" + value + "\"));");
             case "onAction" -> body.add("        " + var + ".addEventHandler(ActionEvent.ACTION, controller::"
                     + value.replaceFirst("^#", "") + ");");
-            default -> { /* fx:id / id / spacing (ctor) consumed elsewhere */ }
+            default -> { /* fx:id / fx:controller consumed elsewhere */ }
         }
     }
 
-    private static boolean uses(ElementNode root, String attributeName) {
-        boolean[] found = { false };
-        root.walk(element -> {
-            if (element.attribute(attributeName) != null) {
-                found[0] = true;
-            }
-        });
-        return found[0];
-    }
-
-    private static String varName(ElementNode element) {
-        String fxId = element.attribute("fx:id");
-        return fxId != null ? fxId : element.tag().toLowerCase();
-    }
-
     private static String escape(String value) {
-        return value.replace("\\", "\\\\").replace("\"", "\\\"");
+        return value.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t");
     }
 
     private static String packageOf(String fqcn) {

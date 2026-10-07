@@ -1,0 +1,39 @@
+plugins {
+    id 'java'
+    id 'org.teavm' version '0.14.1'
+}
+
+dependencies {
+    // Compile against the WebFX Kit's javafx.* classes directly (emul artifacts)
+    // instead of org.openjfx: Gradle ignores the Maven profiles that pull
+    // platform-classified openjfx jars, and the kit IS the API TeaVM compiles.
+    implementation 'dev.webfx:webfx-kit-javafxgraphics-elemental2:0.1.0-SNAPSHOT'
+    implementation 'dev.webfx:webfx-kit-javafxgraphics-registry-elemental2:0.1.0-SNAPSHOT'
+    implementation 'dev.webfx:webfx-kit-javafxcontrols-emul:0.1.0-SNAPSHOT'
+    implementation 'dev.webfx:webfx-kit-javafxcontrols-registry-elemental2:0.1.0-SNAPSHOT'
+    implementation 'dev.webfx:webfx-platform-teavm-elemental2-polyfill:0.1.0-SNAPSHOT'
+    implementation 'dev.webfx:webfx-platform-boot-java:0.1.0-SNAPSHOT'
+    implementation 'dev.webfx:webfx-platform-console-elemental2:0.1.0-SNAPSHOT'
+    implementation 'dev.webfx:webfx-platform-os-elemental2:0.1.0-SNAPSHOT'
+    implementation 'dev.webfx:webfx-platform-resource-teavm:0.1.0-SNAPSHOT'
+    implementation 'dev.webfx:webfx-platform-resource-web:0.1.0-SNAPSHOT'
+    implementation 'dev.webfx:webfx-platform-shutdown-elemental2:0.1.0-SNAPSHOT'
+    implementation 'dev.webfx:webfx-platform-storage-elemental2:0.1.0-SNAPSHOT'
+    implementation 'dev.webfx:webfx-platform-uischeduler-elemental2:0.1.0-SNAPSHOT'
+    implementation 'dev.webfx:webfx-platform-useragent-elemental2:0.1.0-SNAPSHOT'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 21
+    options.encoding = 'UTF-8'
+}
+
+teavm {
+    all {
+        mainClass = 'com.jmifx.spike.SpikeApp'
+    }
+    wasmGC {
+        addedToWebApp = true
+        targetFileName = 'spike.wasm'
+    }
+}

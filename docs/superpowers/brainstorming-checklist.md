@@ -5,14 +5,14 @@ Classification: **Architectural** (new project)
 ## Checklist
 
 - [x] 1. Explore project context (jmifx empty; jmix framework source at ../jmix; erp app on Jmix 3.0.3; WebFX/TeaVM research)
-- [ ] 2. Visual companion — offer just-in-time if a visual question arises
-- [ ] 3. Clarifying questions (one at a time)
-- [ ] 4. Propose 2-3 approaches with trade-offs
-- [ ] 5. Present design in sections, approval after each
-- [ ] 6. Write design doc to docs/superpowers/specs/2026-10-06-jmifx-design.md + commit (no git repo yet — init first)
-- [ ] 7. Spec self-review (placeholders, consistency, scope, ambiguity)
-- [ ] 8. User reviews written spec
-- [ ] 9. Invoke writing-plans skill
+- [x] 2. Visual companion — not needed (no visual questions arose)
+- [x] 3. Clarifying questions — full-replacement topology; pipeline PoC scope; Jmix 3.0.3
+- [x] 4. Approaches proposed — A codegen-first chosen (B runtime loader, C CLI bridge rejected)
+- [x] 5. Design presented in 4 sections — all approved
+- [x] 6. Design doc written to docs/superpowers/specs/2026-10-06-jmifx-design.md + committed (git init, commit 8d53140)
+- [x] 7. Spec self-review — fixed jmifg typo, FxView interface ambiguity, removed unused init() hook
+- [x] 8. User reviews written spec — approved ("start writing out the implementation plan")
+- [x] 9. writing-plans invoked — plan at docs/superpowers/plans/2026-10-06-jmifx-milestone1.md (11 tasks, spike-first)
 
 ## Key research findings
 

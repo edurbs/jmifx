@@ -1,0 +1,11 @@
+plugins {
+    id 'jmifx'
+}
+
+jmifx {
+    mainClass = 'com.jmifx.demo.client.DemoFxApp'
+}
+
+dependencies {
+    implementation project(':jmifx')
+}

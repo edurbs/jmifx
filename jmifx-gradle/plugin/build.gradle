@@ -1,0 +1,35 @@
+plugins {
+    id 'java-gradle-plugin'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 21
+    options.encoding = 'UTF-8'
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+}
+
+gradlePlugin {
+    website = 'https://github.com/eduardo/jmifx'
+    vcsUrl = 'https://github.com/eduardo/jmifx'
+    plugins {
+        jmifx {
+            id = 'jmifx'
+            implementationClass = 'com.jmifx.gradle.JmifxPlugin'
+            displayName = 'jmifx client module plugin'
+            description = 'FXML (Scene Builder) views compiled by TeaVM/WebFX to WebAssembly for Jmix apps'
+            tags.set(['javafx', 'jmix', 'teavm', 'webassembly'])
+        }
+    }
+}
+
+dependencies {
+    implementation project(':codegen')
+    implementation 'org.teavm:teavm-gradle-plugin:0.14.1'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.11.4'
+    testImplementation gradleTestKit()
+}

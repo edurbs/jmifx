@@ -1,0 +1,25 @@
+pluginManagement {
+    includeBuild('jmifx-gradle')
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+        maven { url = 'https://central.sonatype.com/repository/maven-snapshots/' }
+        maven { url = 'https://global.repo.jmix.io/repository/public' }
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
+    repositories {
+        mavenCentral()
+        maven { url = 'https://central.sonatype.com/repository/maven-snapshots/' }
+        maven { url = 'https://global.repo.jmix.io/repository/public' }
+    }
+}
+
+rootProject.name = 'jmifx'
+
+include 'jmifx'
+include 'jmifx-starter'
+include 'jmifx-demo'
+include 'jmifx-demo-client'

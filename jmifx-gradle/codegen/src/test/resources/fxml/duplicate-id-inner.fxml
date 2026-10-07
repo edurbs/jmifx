@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="fixture.BadController">
+    <Label fx:id="dup" text="a"/>
+    <TextField fx:id="dup"/>
+</VBox>

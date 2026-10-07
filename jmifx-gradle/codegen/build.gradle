@@ -1,0 +1,21 @@
+plugins {
+    id 'java'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 21
+    options.encoding = 'UTF-8'
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.11.4'
+    // For the compile-and-instantiate IT (stubs + generated code touch javafx API)
+    testImplementation 'org.openjfx:javafx-base:25:linux'
+    testImplementation 'org.openjfx:javafx-graphics:25:linux'
+    testImplementation 'org.openjfx:javafx-controls:25:linux'
+}

@@ -1,0 +1,21 @@
+plugins {
+    id 'java'
+}
+
+// Compile against the WebFX Kit's javafx.* API (emul artifacts — same classes
+// TeaVM compiles) plus the kit launcher needed by FxApplication's launch idiom.
+// JVM tests run against real OpenJFX (explicit linux classifiers — Gradle
+// ignores openjfx's Maven profile machinery).
+dependencies {
+    compileOnly 'dev.webfx:webfx-kit-javafxbase-emul:0.1.0-SNAPSHOT'
+    compileOnly 'dev.webfx:webfx-kit-javafxgraphics-emul:0.1.0-SNAPSHOT'
+    compileOnly 'dev.webfx:webfx-kit-javafxcontrols-emul:0.1.0-SNAPSHOT'
+    compileOnly 'dev.webfx:webfx-kit-launcher:0.1.0-SNAPSHOT'
+
+    testImplementation 'org.openjfx:javafx-base:25:linux'
+    testImplementation 'org.openjfx:javafx-graphics:25:linux'
+    testImplementation 'org.openjfx:javafx-controls:25:linux'
+
+    // JavaFX controls need a display at class-init; tests run under xvfb-run
+    // (see docs/superpowers/spikes). No Monocle in JavaFX 25 linux jars.
+}

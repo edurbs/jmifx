@@ -14,6 +14,10 @@ Classification: **Architectural** (new project)
 - [x] 8. User reviews written spec — approved ("start writing out the implementation plan")
 - [x] 9. writing-plans invoked — plan at docs/superpowers/plans/2026-10-06-jmifx-milestone1.md (11 tasks, spike-first)
 
+## Outcome — Milestone 1 COMPLETE (2026-10-07)
+
+All 11 plan tasks executed (native/inline), final whole-branch review done (2 Critical + 3 Important findings fixed in one TDD pass, 10 minors deferred to ledger), E2E acceptance PASSED in a real browser (see docs/superpowers/e2e/m1-acceptance.md). Branch: feature/m1-pipeline.
+
 ## Key research findings
 
 - WebFX officially supports TeaVM → WebAssembly GC (Nov 2025). Modern browsers only.

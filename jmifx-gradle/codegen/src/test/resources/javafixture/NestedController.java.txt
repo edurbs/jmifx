@@ -1,0 +1,19 @@
+package fixture;
+
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+
+public class NestedController {
+
+    Label bLabel;
+    Button okButton;
+
+    public final java.util.List<String> events = new java.util.ArrayList<>();
+
+    public void initialize() {
+    }
+
+    public void ok(javafx.event.ActionEvent event) {
+        events.add("ok");
+    }
+}

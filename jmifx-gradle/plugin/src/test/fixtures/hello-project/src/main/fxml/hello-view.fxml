@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="client.HelloController" spacing="10">
+    <Label fx:id="greetingLabel" text="Hello!"/>
+    <TextField fx:id="nameField" promptText="Type your name"/>
+    <Button fx:id="greetButton" text="Greet" onAction="#greet"/>
+</VBox>

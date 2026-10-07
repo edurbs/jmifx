@@ -1,0 +1,16 @@
+plugins {
+    id 'jmifx'
+}
+
+repositories {
+    mavenCentral()
+    maven { url = 'https://central.sonatype.com/repository/maven-snapshots/' }
+}
+
+dependencies {
+    // minimal framework stub built by the test setup (libs/jmifx-stub.jar)
+    compileOnly files('libs/jmifx-stub.jar')
+    // WebFX Kit emul provides the javafx.* API (spike-validated approach)
+    compileOnly 'dev.webfx:webfx-kit-javafxgraphics-emul:0.1.0-SNAPSHOT'
+    compileOnly 'dev.webfx:webfx-kit-javafxcontrols-emul:0.1.0-SNAPSHOT'
+}

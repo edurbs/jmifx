@@ -1,0 +1,17 @@
+plugins {
+    id 'jmifx'
+}
+
+jmifx {
+    mainClass = 'client.DemoFxApp'
+}
+
+repositories {
+    mavenCentral()
+}
+
+tasks.register('printTeavmMain') {
+    doLast {
+        println "MAIN=" + teavm.all.mainClass.get()
+    }
+}

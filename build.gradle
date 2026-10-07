@@ -1,0 +1,21 @@
+allprojects {
+    group = 'com.jmifx'
+    version = '0.1.0-SNAPSHOT'
+}
+
+subprojects {
+    apply plugin: 'java'
+
+    tasks.withType(JavaCompile).configureEach {
+        options.release = 21
+        options.encoding = 'UTF-8'
+    }
+
+    tasks.withType(Test).configureEach {
+        useJUnitPlatform()
+    }
+
+    dependencies {
+        testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+    }
+}

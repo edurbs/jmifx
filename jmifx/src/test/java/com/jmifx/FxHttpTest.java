@@ -196,6 +196,30 @@ class FxHttpTest {
     }
 
     @Test
+    void relativeUrlPassedThroughToTransportUnresolved() {
+        // regression: the browser transport must receive the RELATIVE url so
+        // fetch resolves it against the PAGE ORIGIN (works when the app is
+        // served from any host, not just localhost). JVM transports resolve
+        // against jmifx.base.url themselves.
+        AtomicReference<String> seenUrl = new AtomicReference<>();
+        FxHttp.setTransport(new FxHttpTransport() {
+            @Override
+            public void post(String url, String contentType, String authorization, String body,
+                             FxHttp.Listener listener) {
+                seenUrl.set(url);
+                listener.onResult(200, "ok");
+            }
+        });
+        try {
+            FxHttp.post("/oauth2/token", "{}", resultListener(new CountDownLatch(1)));
+        } finally {
+            FxHttp.setTransport(new JvmHttpTransport()); // restore for other tests
+        }
+        assertEquals("/oauth2/token", seenUrl.get(),
+                "facade must not resolve relative URLs before the transport");
+    }
+
+    @Test
     void urlEncodePinsKnownValues() {
         assertEquals("S%C3%A3o%20Paulo", FxHttp.urlEncode("São Paulo"));
         assertEquals("grant_type%3Dpassword", FxHttp.urlEncode("grant_type=password"));

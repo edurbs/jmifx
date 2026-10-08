@@ -35,3 +35,7 @@ Final: minor (deferred): secdata2/ scratch dir left in repo root (deleted at fin
 Final: minor (deferred): demo @SpringBootTest classes share the dev H2 file DB (row pollution + lock contention with bootRun) — add a test-scoped datasource override later.
 
 Final: Ruling: reviewer's 15 declined-to-judge lines all stand — 1-8 are explicit spec §2/§7/§10 choices or user-approved plan refinements; 9 (CSRF defaults for token-authenticated /rest/**) is the framework default for bearer APIs; 10 (password not cleared after failed login) and 14 (Back creates a fresh hello view) are demo-consistent behavior; 11-12 demo/tooling environment; 13 (opencode.json) is a harness file, left untracked; 15 screenshots corroborated by tests + in-session browser observation. Cost if wrong: none material to M2 scope; revisit with the desktop/auth follow-up milestones.
+
+## Post-review fix (user-reported)
+
+Final: fixed cross-origin login failure ("Login failed: TypeError: Failed to fetch") — FxHttp resolved relative URLs against the http://localhost:8080 default BEFORE the transport, so browsers on another machine fetched their own localhost. Relative URLs now pass through to the browser transport and fetch resolves them against the PAGE ORIGIN; JVM transport resolves via FxHttp.resolveUrl. Test relativeUrlPassedThroughToTransportUnresolved RED→GREEN, suite green (root+composite), browser-verified from LAN origin http://192.168.22.198:8080/fx/ (login + save + screenshot m2-lan-saved.png). Supersedes plan refinement (1) "page-origin detection deferred".

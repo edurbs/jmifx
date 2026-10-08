@@ -47,12 +47,12 @@ public final class FxHttp {
 
     public static void post(String url, String jsonBody, Listener listener) {
         String token = FxAuth.getAccessToken();
-        transport().post(resolveUrl(url), "application/json",
+        transport().post(url, "application/json",
                 token == null ? null : "Bearer " + token, jsonBody, wrap(listener));
     }
 
     public static void postForm(String url, String formBody, String basicAuth, Listener listener) {
-        transport().post(resolveUrl(url), "application/x-www-form-urlencoded",
+        transport().post(url, "application/x-www-form-urlencoded",
                 basicAuth, formBody, wrap(listener));
     }
 
@@ -77,7 +77,12 @@ public final class FxHttp {
         return out.toString();
     }
 
-    /** Absolute URLs pass through; relative URLs get the configured base (single {@code /} join). */
+    /**
+     * Absolute URLs pass through; relative URLs get the configured base (single {@code /} join).
+     * JVM/desktop transports call this — the browser transport does NOT (fetch resolves
+     * relative URLs natively against the page origin, which keeps the client working
+     * when the app is served from any host).
+     */
     static String resolveUrl(String url) {
         if (url.startsWith("http://") || url.startsWith("https://")) {
             return url;

@@ -20,7 +20,7 @@ class JvmHttpTransport implements FxHttpTransport {
     @Override
     public void post(String url, String contentType, String authorization, String body,
                      FxHttp.Listener listener) {
-        HttpRequest.Builder request = HttpRequest.newBuilder(URI.create(url))
+        HttpRequest.Builder request = HttpRequest.newBuilder(URI.create(FxHttp.resolveUrl(url)))
                 .timeout(Duration.ofSeconds(10))
                 .header("Content-Type", contentType)
                 .POST(HttpRequest.BodyPublishers.ofString(body));

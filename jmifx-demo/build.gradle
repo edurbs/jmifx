@@ -15,6 +15,15 @@ dependencies {
     runtimeOnly project(':jmifx-demo-client')
 
     implementation 'io.jmix.core:jmix-core-starter'
+    implementation 'io.jmix.data:jmix-eclipselink-starter'
+    implementation 'io.jmix.rest:jmix-rest-starter'
+    implementation 'io.jmix.authserver:jmix-authserver-starter'
+    implementation 'io.jmix.security:jmix-security-data-starter'
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
     runtimeOnly 'com.h2database:h2'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.boot:spring-boot-webmvc-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'com.fasterxml.jackson.core:jackson-databind'
 }

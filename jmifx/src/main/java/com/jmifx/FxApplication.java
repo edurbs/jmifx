@@ -35,7 +35,9 @@ public abstract class FxApplication extends Application {
     public void start(Stage stage) {
         registerViews(registry);
         StackPane contentPane = new StackPane();
-        new FxNavigator(contentPane, registry).navigateTo(getStartupViewId());
+        FxNavigator navigator = new FxNavigator(contentPane, registry);
+        FxNavigation.bind(navigator);
+        navigator.navigateTo(getStartupViewId());
         stage.setScene(createScene(contentPane));
         stage.show();
     }

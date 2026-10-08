@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet id="020-create-user-table" author="jmifx">
+        <createTable tableName="USER_">
+            <column name="ID" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="VERSION" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="USERNAME" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="PASSWORD" type="VARCHAR(255)"/>
+            <column name="ENABLED" type="BOOLEAN"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="020-init-admin" author="jmifx">
+        <!-- password: admin (BCrypt, DelegatingPasswordEncoder needs the {bcrypt} prefix) -->
+        <insert tableName="USER_">
+            <column name="ID" value="60885987-1b61-4247-94c7-dff348347f93"/>
+            <column name="VERSION" valueNumeric="1"/>
+            <column name="USERNAME" value="admin"/>
+            <column name="PASSWORD" value="{bcrypt}$2a$10$LvnXh.gs3grx4bvlgNQy8uYMXq87KOmgCXbks9Cv6FxOmw5q.2zge"/>
+            <column name="ENABLED" valueBoolean="true"/>
+        </insert>
+        <!-- SEC_ROLE_ASSIGNMENT is created by the jmix-security-data add-on changelog;
+             rows: admin gets API access (rest-minimal) and the city-rest role -->
+        <insert tableName="SEC_ROLE_ASSIGNMENT">
+            <column name="ID" value="a1e1c0de-0000-4000-8000-000000000001"/>
+            <column name="VERSION" valueNumeric="1"/>
+            <column name="USERNAME" value="admin"/>
+            <column name="ROLE_CODE" value="rest-minimal"/>
+            <column name="ROLE_TYPE" value="resource"/>
+        </insert>
+        <insert tableName="SEC_ROLE_ASSIGNMENT">
+            <column name="ID" value="a1e1c0de-0000-4000-8000-000000000002"/>
+            <column name="VERSION" valueNumeric="1"/>
+            <column name="USERNAME" value="admin"/>
+            <column name="ROLE_CODE" value="city-rest"/>
+            <column name="ROLE_TYPE" value="resource"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>

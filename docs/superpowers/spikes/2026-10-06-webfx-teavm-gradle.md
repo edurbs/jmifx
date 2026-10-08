@@ -59,3 +59,31 @@ public static void main(String[] args) { WebFxKitLauncher.launchApplication(Spik
 - Task 3 (framework): `FxApplication` uses `WebFxKitLauncher.launchApplication` (also means jmifx lib needs the kit launcher on its compile classpath — add `dev.webfx:webfx-kit-launcher` as compileOnly dependency).
 - All client modules: compile against kit emul jars (no org.openjfx anywhere).
 - JVM unit tests of the client framework (Task 3) still need a JVM-runnable javafx provider on the test classpath: use `org.openjfx:javafx-base:25:linux`, `javafx-graphics:25:linux`, `javafx-controls:25:linux` (explicit **linux classifiers**).
+
+## HTTP from wasm (2026-10-07) — M2 spike
+
+**Verdict: route B (fetch via `@JSBody` bridge).** Screenshot: `docs/superpowers/e2e/spike-http.png`.
+
+- **Route A (`java.net.HttpURLConnection`) is dead at runtime**: the TeaVM build succeeds, but the wasm module **traps during instantiation** ("dereferencing a null pointer") whenever `java.net` code is reachable from main (verified by bisect: build + load fine without it, trap with it linked behind a button handler). Never wire `java.net` into wasm-reachable code.
+- **Route B recipe (working, verified in Chromium)** — one `@JSBody` does the *entire* fetch chain in JS and calls back into Java `@JSFunctor` interfaces with primitives/strings only:
+
+```java
+@JSFunctor interface TextCallback extends JSObject { void onResult(int status, String body); }
+@JSFunctor interface ErrorCallback extends JSObject { void onError(String message); }
+
+@JSBody(params = {"url", "method", "contentType", "authorization", "body", "onOk", "onErr"},
+        script = "var h = {};"
+               + "if (contentType) h['Content-Type'] = contentType;"
+               + "if (authorization) h['Authorization'] = authorization;"
+               + "fetch(url, {method: method, headers: h, body: body})"
+               + "  .then(function(r) { return r.text().then(function(t) { onOk(r.status, t); }); })"
+               + "  .catch(function(e) { onErr('' + e); });")
+static native void fetchText(String url, String method, String contentType, String authorization,
+                             String body, TextCallback onOk, ErrorCallback onErr);
+```
+
+- **elemental2 `Promise`/`Response` marshalling is a dead end**: `DomGlobal.window.fetch(...)` + Java-side `.then(...)` on `elemental2.promise.Promise` rejects with `Error: (could not fetch message)` (the request itself returns 200 — the failure is in the JSO marshalling/un-annotated `Response.text()`). `@JSProperty("status")` subinterfaces DO work, but the all-JS chain above is simpler and needs no elemental2 types in Java signatures at all.
+- **JRE probes**: `System.getProperty(key, default)` returns the default without throwing ✓; `java.util.Base64.getEncoder()` produces correct output (`cHJvYmU=`) ✓.
+- **`ServiceLoader` works via `iterator()`/for-each ✓** (provider found); **`findFirst()` is NOT implemented** in TeaVM 0.14.1 ("Method java.util.ServiceLoader.findFirst() was not found" — build failure).
+- **No UI freeze** (callbacks arrive asynchronously); browser console clean.
+- Probe server: `spike-webfx/echo-server.py` (same-origin static + POST /echo, port 8090).

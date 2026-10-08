@@ -1,5 +1,6 @@
 package com.jmifx.demo.client;
 
+import com.jmifx.FxNavigation;
 import javafx.event.ActionEvent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -15,6 +16,7 @@ public class HelloViewController {
     Label greetingLabel;
     TextField nameField;
     Button greetButton;
+    Button cityButton;
 
     public void initialize() {
     }
@@ -24,5 +26,9 @@ public class HelloViewController {
         greetingLabel.setText(name == null || name.isBlank()
                 ? "Hello!"
                 : "Hello, " + name + "!");
+    }
+
+    public void openCityDetail(ActionEvent event) {
+        FxNavigation.navigateTo("city-detail-view");
     }
 }

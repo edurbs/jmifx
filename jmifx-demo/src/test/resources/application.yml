@@ -1,0 +1,38 @@
+# Test configuration — SHADOWS src/main/resources/application.yml entirely
+# (same-name classpath resources are first-found, not merged): keep every
+# property in sync with the main file, except the datasource, which is an
+# in-memory H2 so tests never touch or lock the dev file DB (.jmix/h2/demo)
+# and can run while bootRun is up.
+spring:
+  security:
+    oauth2:
+      authorizationserver:
+        client:
+          jmifx:
+            registration:
+              client-id: jmifx
+              client-secret: "{noop}jmifx-secret"
+              authorization-grant-types: password
+              client-authentication_methods: client_secret_basic
+            token:
+              access-token-format: reference
+              access-token-time-to-live: 1h
+
+main:
+  datasource:
+    url: jdbc:h2:mem:jmifx-demo-test;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+  liquibase:
+    change-log: com/jmifx/demo/liquibase/changelog.xml
+
+jmix:
+  core:
+    available-locales: en
+  authserver:
+    use-in-memory-authorization-service: true
+  resource-server:
+    authenticated-url-patterns: /rest/**
+
+server:
+  port: 8080

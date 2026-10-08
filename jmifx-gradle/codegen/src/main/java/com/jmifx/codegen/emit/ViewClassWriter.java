@@ -84,6 +84,7 @@ public final class ViewClassWriter {
             switch (element.tag()) {
                 case "Label" -> controlImports.add("import javafx.scene.control.Label;\n");
                 case "TextField" -> controlImports.add("import javafx.scene.control.TextField;\n");
+                case "PasswordField" -> controlImports.add("import javafx.scene.control.PasswordField;\n");
                 case "Button" -> controlImports.add("import javafx.scene.control.Button;\n");
                 case "VBox" -> layoutImports.add("import javafx.scene.layout.VBox;\n");
                 case "HBox" -> layoutImports.add("import javafx.scene.layout.HBox;\n");

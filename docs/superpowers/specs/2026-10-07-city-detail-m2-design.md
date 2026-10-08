@@ -126,7 +126,7 @@ Static session holder: `getAccessToken()`, `setAccessToken(String)`, `clear()`, 
 
 ## 10. Deferred scope (post-Milestone-2)
 
-Refresh tokens, logout, remember-me/token persistence (browser storage), authorization-code + PKCE public client, city list view, load/edit of existing entities, error-body parsing, GET/PUT on `FxHttp`, general JSON parsing, URL routing/hash navigation, automated browser E2E, page-origin URL detection for cross-host deployments.
+Built-in framework login view (Jmix-style building block in `jmifx`, auto-registered — login currently lives in the demo client), refresh tokens, logout, remember-me/token persistence (browser storage), authorization-code + PKCE public client, city list view, load/edit of existing entities, error-body parsing, GET/PUT on `FxHttp`, general JSON parsing, URL routing/hash navigation, automated browser E2E, page-origin URL detection for cross-host deployments.
 
 ## Change log
 

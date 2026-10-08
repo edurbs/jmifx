@@ -22,3 +22,16 @@ Task 7: Ruling: add-on changelogs are NOT auto-discovered — the app changelog 
 Task 7: Ruling: DatabaseUserRepository must override initAnonymousUser (empty authorities — keeps anonymous fully unauthorized; base class leaves authorities null → NPE at filter-chain build). Cost if wrong: boot crash.
 Task 7: Ruling: stored password needs the {bcrypt} prefix (DelegatingPasswordEncoder rejects bare hashes with 500); jmix.resource-server.authenticated-url-patterns=/rest/** is required — without it REST calls 500 "Authentication is not set" instead of 401 and Bearer tokens are never resolved. Cost if wrong: unusable auth surface.
 Task 7: Ruling: tests verify persistence via UnconstrainedDataManager (withSystem/withUser hit API/UI scope denials: system has no roles, admin's city-rest is API-scope); authorization itself is pinned by the REST assertions (201/401/4xx). Also: dev H2 file DB wiped (rm -rf jmifx-demo/.jmix) twice during wiring — dev-only, replays via liquibase.
+
+## Final review (subagent, whole branch de2aa64..df2e5b1)
+
+Verdict: SHIP. 0 Critical / 0 Important / 6 Minor. Reviewer independently verified the BCrypt hash matches "admin" and the SEC_ROLE_ASSIGNMENT insert columns match the add-on changelog; confirmed zero Spring/Jmix on client path, kit compileOnly, locale-safe hex formatting.
+
+Final: minor (deferred): FxJson.stringValue throws NumberFormatException on malformed \uXXXX escapes instead of returning null (contract says null) — hostile-input only.
+Final: minor (deferred): LoginViewController navigates on any 2xx even when access_token is missing/unparseable (null token) — surfaces later as "Save failed (HTTP 401)"; add null-token guard before merge-worthy polish.
+Final: minor (deferred): on a stock JVM the ServiceLoader finds BrowserHttpTransport and the "no transport" ISE is dead code — desktop consumers get UnsatisfiedLinkError from the @JSBody native call; document on FxHttpTransport for the desktop milestone.
+Final: minor (deferred): listenerRunsOnFxApplicationThread covers onResult only; onFailure-thread pairing untested (implementation marshals both identically).
+Final: minor (deferred): secdata2/ scratch dir left in repo root (deleted at finish).
+Final: minor (deferred): demo @SpringBootTest classes share the dev H2 file DB (row pollution + lock contention with bootRun) — add a test-scoped datasource override later.
+
+Final: Ruling: reviewer's 15 declined-to-judge lines all stand — 1-8 are explicit spec §2/§7/§10 choices or user-approved plan refinements; 9 (CSRF defaults for token-authenticated /rest/**) is the framework default for bearer APIs; 10 (password not cleared after failed login) and 14 (Back creates a fresh hello view) are demo-consistent behavior; 11-12 demo/tooling environment; 13 (opencode.json) is a harness file, left untracked; 15 screenshots corroborated by tests + in-session browser observation. Cost if wrong: none material to M2 scope; revisit with the desktop/auth follow-up milestones.

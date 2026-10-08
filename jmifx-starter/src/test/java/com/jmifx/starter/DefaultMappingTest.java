@@ -48,4 +48,14 @@ class DefaultMappingTest {
         mvc.perform(get("/fx/nope.wasm"))
                 .andExpect(status().isNotFound());
     }
+
+    @Test
+    void servesAssetsWithNoCacheHeader() throws Exception {
+        // the wasm filename never changes between builds — without no-cache a
+        // normal reload can keep a stale client after redeploy (M2 incident)
+        mvc.perform(get("/fx/index.html"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control",
+                        org.hamcrest.Matchers.containsString("no-cache")));
+    }
 }

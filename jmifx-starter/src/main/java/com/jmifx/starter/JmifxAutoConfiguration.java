@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.CacheControl;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -28,7 +29,11 @@ public class JmifxAutoConfiguration {
             @Override
             public void addResourceHandlers(ResourceHandlerRegistry registry) {
                 registry.addResourceHandler(properties.getPath() + "/**")
-                        .addResourceLocations("classpath:/jmifx-web/");
+                        .addResourceLocations("classpath:/jmifx-web/")
+                        // asset filenames (app.wasm) are stable across builds —
+                        // force revalidation so clients never run a stale wasm
+                        // after a redeploy (conditional 304s keep it cheap)
+                        .setCacheControl(CacheControl.noCache());
             }
         };
     }

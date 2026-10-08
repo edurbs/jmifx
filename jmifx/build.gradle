@@ -11,6 +11,8 @@ dependencies {
     compileOnly 'dev.webfx:webfx-kit-javafxgraphics-emul:0.1.0-SNAPSHOT'
     compileOnly 'dev.webfx:webfx-kit-javafxcontrols-emul:0.1.0-SNAPSHOT'
     compileOnly 'dev.webfx:webfx-kit-launcher:0.1.0-SNAPSHOT'
+    // JS bridge annotations for BrowserHttpTransport (TeaVM-pinned version)
+    compileOnly 'org.teavm:teavm-jso:0.14.1'
 
     testImplementation 'org.openjfx:javafx-base:25:linux'
     testImplementation 'org.openjfx:javafx-graphics:25:linux'

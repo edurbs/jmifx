@@ -8,7 +8,7 @@ public class DemoFxApp extends FxApplication {
 
     @Override
     protected String getStartupViewId() {
-        return "hello-view";
+        return "login-view";
     }
 
     @Override

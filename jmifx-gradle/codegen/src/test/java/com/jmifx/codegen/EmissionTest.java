@@ -57,6 +57,15 @@ class EmissionTest {
     }
 
     @Test
+    void passwordFieldViewMatchesGoldenFile() throws Exception {
+        new FxmlViewCompiler().compile(List.of(fixture("login-view.fxml")), generatedDir);
+
+        Path emitted = generatedDir.resolve("fixture/LoginView.java");
+        assertTrue(Files.exists(emitted), "expected " + emitted);
+        assertEquals(golden("LoginView.java.txt"), normalized(emitted));
+    }
+
+    @Test
     void nestedContainersAndAnonymousChildrenEmitCorrectCode() throws Exception {
         new FxmlViewCompiler().compile(List.of(fixture("nested-anon.fxml")), generatedDir);
 

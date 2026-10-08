@@ -42,7 +42,7 @@ xvfb-run -a ./gradlew build              # use this: :jmifx tests need an X disp
 
 ## FXML subset (enforced by codegen, errors are `file:line` build failures)
 
-- Elements: `VBox, HBox, StackPane, Pane, Label, TextField, Button`. Root must be a container.
+- Elements: `VBox, HBox, StackPane, Pane, Label, TextField, PasswordField, Button`. Root must be a container.
 - Attributes: `fx:id, id, text, promptText, prefWidth, prefHeight, maxWidth, spacing, alignment, onAction` (`onAction` on Button only).
 - `fx:controller` (FQCN) required; controllers need package-visible (min) `@FXML` fields and `void initialize()`.
 - View id = FXML base name (`hello-view.fxml` → `hello-view`); generated class `HelloView` ("View" suffix not doubled). Generated classes live in the controller's package; a global `com.jmifx.generated.FxViewsIndex` registers all views.

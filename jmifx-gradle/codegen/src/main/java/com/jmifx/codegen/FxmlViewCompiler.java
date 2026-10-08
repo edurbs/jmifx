@@ -26,9 +26,9 @@ public final class FxmlViewCompiler {
 
     /** Canonical order used in error messages. */
     public static final List<String> SUPPORTED_ELEMENTS = List.of(
-            "VBox", "HBox", "StackPane", "Pane", "Label", "TextField", "Button");
+            "VBox", "HBox", "StackPane", "Pane", "Label", "TextField", "PasswordField", "Button");
     public static final Set<String> CONTAINERS = Set.of("VBox", "HBox", "StackPane", "Pane");
-    public static final Set<String> CONTROLS = Set.of("Label", "TextField", "Button");
+    public static final Set<String> CONTROLS = Set.of("Label", "TextField", "PasswordField", "Button");
     public static final List<String> SUPPORTED_ATTRIBUTES = List.of(
             "fx:id", "id", "text", "promptText", "prefWidth", "prefHeight", "maxWidth",
             "spacing", "alignment", "onAction");

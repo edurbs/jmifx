@@ -47,7 +47,31 @@ class FxmlViewCompilerTest {
         assertFalse(result.success());
         FxmlCompileError error = result.errors().get(0);
         assertTrue(error.format().contains("unsupported-element.fxml:3: unsupported element 'TableView' "
-                + "(supported: VBox, HBox, StackPane, Pane, Label, TextField, Button)"),
+                + "(supported: VBox, HBox, StackPane, Pane, Label, TextField, PasswordField, Button)"),
+                () -> error.format());
+    }
+
+    @Test
+    void passwordFieldIsAcceptedAsControl() {
+        FxmlViewCompiler compiler = new FxmlViewCompiler();
+
+        CompilationResult result = compiler.compile(List.of(fixture("login-view.fxml")), generatedDir);
+
+        assertTrue(result.errors().isEmpty(), () -> result.errors().toString());
+        assertTrue(result.success());
+        assertEquals("login-view", result.views().get(0).viewId());
+    }
+
+    @Test
+    void rejectsOnActionOnPasswordField() {
+        FxmlViewCompiler compiler = new FxmlViewCompiler();
+
+        CompilationResult result = compiler.compile(List.of(fixture("password-field-onaction.fxml")), generatedDir);
+
+        assertFalse(result.success());
+        FxmlCompileError error = result.errors().get(0);
+        assertTrue(error.format().contains("password-field-onaction.fxml:2: "
+                        + "onAction is only supported on Button"),
                 () -> error.format());
     }
 

@@ -101,6 +101,43 @@ class CodegenCompileIT {
     }
 
     @Test
+    void passwordFieldViewCompilesAndWiresPasswordField() throws Exception {
+        Path fxml = Path.of(getClass().getResource("/fxml/login-view.fxml").getPath());
+        Path generated = work.resolve("generated3");
+        CompilationResult result = new FxmlViewCompiler().compile(List.of(fxml), generated);
+        assertTrue(result.success(), () -> result.errors().toString());
+
+        String controllerSrc = Files.readString(
+                Path.of(getClass().getResource("/javafixture/LoginController.java.txt").getPath()));
+        Files.createDirectories(generated.resolve("fixture"));
+        Files.writeString(generated.resolve("fixture/LoginController.java"), controllerSrc);
+
+        Path out = work.resolve("out3");
+        Files.createDirectories(out);
+        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        int exit = compiler.run(null, null, System.err,
+                "--release", "21",
+                "-classpath", System.getProperty("java.class.path"),
+                "-d", out.toString(),
+                generated.resolve("fixture/LoginView.java").toString(),
+                generated.resolve("fixture/LoginController.java").toString());
+        assertEquals(0, exit, "javac failed on generated login sources — see stderr above");
+
+        try (URLClassLoader loader = new URLClassLoader(
+                new URL[]{ out.toUri().toURL() },
+                getClass().getClassLoader())) {
+            Class<?> viewClass = Class.forName("fixture.LoginView", true, loader);
+            var view = viewClass.getDeclaredConstructor().newInstance();
+
+            var root = (javafx.scene.layout.VBox) viewClass.getMethod("getRoot").invoke(view);
+            assertEquals(4, root.getChildren().size());
+            assertInstanceOf(javafx.scene.control.PasswordField.class, root.getChildren().get(2));
+            assertEquals("Password",
+                    ((javafx.scene.control.TextInputControl) root.getChildren().get(2)).getPromptText());
+        }
+    }
+
+    @Test
     void nestedAndAnonymousViewCompilesAndBuildsCorrectTree() throws Exception {
         Path fxml = Path.of(getClass().getResource("/fxml/nested-anon.fxml").getPath());
         Path generated = work.resolve("generated2");

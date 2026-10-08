@@ -1,8 +1,10 @@
-spring:
+main:
   datasource:
-    url: jdbc:h2:mem:demo
+    url: jdbc:h2:file:.jmix/h2/demo
     username: sa
     password: ""
+  liquibase:
+    change-log: com/jmifx/demo/liquibase/changelog.xml
 
 jmix:
   core:

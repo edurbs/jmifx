@@ -1,6 +1,21 @@
+spring:
+  security:
+    oauth2:
+      authorizationserver:
+        client:
+          jmifx:
+            registration:
+              client-id: jmifx
+              client-secret: "{noop}jmifx-secret"
+              authorization-grant-types: password
+              client-authentication_methods: client_secret_basic
+            token:
+              access-token-format: reference
+              access-token-time-to-live: 1h
+
 main:
   datasource:
-    url: jdbc:h2:file:.jmix/h2/demo
+    url: jdbc:h2:file:./.jmix/h2/demo
     username: sa
     password: ""
   liquibase:
@@ -9,6 +24,10 @@ main:
 jmix:
   core:
     available-locales: en
+  authserver:
+    use-in-memory-authorization-service: true
+  resource-server:
+    authenticated-url-patterns: /rest/**
 
 server:
   port: 8080
